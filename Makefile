@@ -15,7 +15,6 @@ format:
 lint:
 	cargo fmt -- --check
 	cargo clippy
-	-cargo audit
 
 build: lint
 	cargo build

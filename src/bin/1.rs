@@ -13,7 +13,7 @@ impl Problem for One {
             .collect()
     }
 
-    fn part_1(depths: &Vec<usize>, _state: &ProblemState<Self::Extra>) -> Option<String> {
+    fn part_1(depths: &Self::Input, _state: &ProblemState<Self::Extra>) -> Option<String> {
         let mut increases = 0;
         let mut last = depths[0];
         for &depth in &depths[1..] {
@@ -26,8 +26,8 @@ impl Problem for One {
         Some(format!("{}", increases))
     }
 
-    fn part_2(depths: &Vec<usize>, state: &ProblemState<Self::Extra>) -> Option<String> {
-        let windows: Vec<usize> = depths
+    fn part_2(depths: &Self::Input, state: &ProblemState<Self::Extra>) -> Option<String> {
+        let windows = depths
             .windows(3)
             .map(|window| window.iter().sum())
             .collect();
