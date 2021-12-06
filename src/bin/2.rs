@@ -81,7 +81,7 @@ forward 2"#);
 }
 
 #[cfg(test)]
-mod one {
+mod test {
     use super::*;
     use advent_of_code_2021::problem::assert_solution;
 
