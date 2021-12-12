@@ -15,7 +15,7 @@ pub struct Grid<T> {
 
     grid: Vec<Vec<T>>,
 
-    default: T,
+    pub default: T,
 }
 
 impl<T> Grid<T> {
