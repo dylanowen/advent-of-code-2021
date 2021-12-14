@@ -6,6 +6,9 @@ use std::fmt;
 use std::fmt::{Display, Formatter};
 use std::ops::{Add, Sub};
 
+pub type PUsize = (usize, usize);
+pub type PIsize = (isize, isize);
+
 pub trait PointLike<Num>
 where
     Num: Add<Output = Num> + Sub<Output = Num> + Ord,
@@ -18,12 +21,16 @@ where
 
     fn y(&self) -> Num;
 
+    fn x_mut(&mut self) -> &mut Num;
+
+    fn y_mut(&mut self) -> &mut Num;
+
     fn neighbors(&self) -> Vec<Self>
     where
         Self: Sized;
 
     #[inline]
-    fn add(&self, other: &dyn PointLike<Num>) -> Self
+    fn add<P: PointLike<Num>>(&self, other: P) -> Self
     where
         Self: Sized,
     {
@@ -31,15 +38,17 @@ where
     }
 
     #[inline]
-    fn sub(&self, other: &dyn PointLike<Num>) -> Self
+    fn sub<P: PointLike<Num>>(&self, other: P) -> Self
     where
         Self: Sized,
     {
         Self::new(self.x() - other.x(), self.y() - other.y())
     }
 
-    #[inline]
-    fn distance(&self, other: &dyn PointLike<Num>) -> Num {
+    fn distance<P: PointLike<Num>>(&self, other: P) -> Self
+    where
+        Self: Sized,
+    {
         let x_distance = if self.x() > other.x() {
             self.x() - other.x()
         } else {
@@ -51,13 +60,22 @@ where
             other.y() - self.y()
         };
 
-        x_distance + y_distance
+        Self::new(x_distance, y_distance)
+    }
+
+    #[inline]
+    fn manhattan_distance<P: PointLike<Num>>(&self, other: P) -> Num
+    where
+        Self: Sized,
+    {
+        let distance = self.distance(other);
+        distance.x() + distance.y()
     }
 }
 
-impl<T> PartialEq for dyn PointLike<T>
+impl<Num> PartialEq for dyn PointLike<Num>
 where
-    T: PartialEq + Add<Output = T> + Sub<Output = T> + Ord,
+    Num: PartialEq + Add<Output = Num> + Sub<Output = Num> + Ord,
 {
     fn eq(&self, other: &Self) -> bool {
         self.x() == other.x() && self.y() == other.y()
@@ -76,6 +94,7 @@ where
 #[macro_export]
 macro_rules! point_like {
     ($primitive:ty) => {
+
         impl PointLike<$primitive> for ($primitive, $primitive) {
             #[inline]
             fn new(x: $primitive, y: $primitive) -> Self
@@ -93,6 +112,16 @@ macro_rules! point_like {
             #[inline]
             fn y(&self) -> $primitive {
                 self.1
+            }
+
+            #[inline]
+            fn x_mut(&mut self) -> &mut $primitive {
+                &mut self.0
+            }
+
+            #[inline]
+            fn y_mut(&mut self) -> &mut $primitive {
+                &mut self.1
             }
 
             fn neighbors(&self) -> Vec<Self> {
@@ -113,6 +142,8 @@ macro_rules! point_like {
 
                 result
             }
+
+
         }
     };
 

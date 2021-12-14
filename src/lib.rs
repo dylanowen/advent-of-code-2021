@@ -1,3 +1,3 @@
 pub mod coordinates;
 pub mod problem;
-mod two_d;
+pub mod two_d;

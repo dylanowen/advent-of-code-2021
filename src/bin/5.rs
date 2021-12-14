@@ -2,16 +2,16 @@ use env_logger::Env;
 use lazy_static::lazy_static;
 use regex::Regex;
 
-use advent_of_code_2021::coordinates::two_d::{Point, PointLike};
-use advent_of_code_2021::coordinates::Grid;
 use advent_of_code_2021::example;
 use advent_of_code_2021::problem::RunFor;
 use advent_of_code_2021::problem::{run, Problem, ProblemState};
 
+use advent_of_code_2021::two_d::{Grid, PUsize, PointLike};
+
 struct Five {}
 
 impl Problem for Five {
-    type Input = Vec<(Point, Point)>;
+    type Input = Vec<(PUsize, PUsize)>;
     type Extra = ();
 
     fn parse(s: &str, _state: &ProblemState<Self::Extra>) -> Self::Input {
@@ -22,12 +22,12 @@ impl Problem for Five {
         s.split('\n')
             .map(|line| {
                 let parsed_row = VENT_RE.captures(line).unwrap();
-                let x1 = parsed_row[1].parse::<isize>().unwrap();
-                let y1 = parsed_row[2].parse::<isize>().unwrap();
-                let x2 = parsed_row[3].parse::<isize>().unwrap();
-                let y2 = parsed_row[4].parse::<isize>().unwrap();
+                let x1 = parsed_row[1].parse::<usize>().unwrap();
+                let y1 = parsed_row[2].parse::<usize>().unwrap();
+                let x2 = parsed_row[3].parse::<usize>().unwrap();
+                let y2 = parsed_row[4].parse::<usize>().unwrap();
 
-                (Point::new(x1, y1), Point::new(x2, y2))
+                ((x1, y1), (x2, y2))
             })
             .collect()
     }
@@ -45,26 +45,26 @@ impl Problem for Five {
     }
 }
 
-fn calculate_vent_danger(vents: &[(Point, Point)], handle_diagonals: bool) -> usize {
-    let mut ocean_floor: Grid<usize> = Grid::new_from_range(0..10, 0..10);
+fn calculate_vent_danger(vents: &[(PUsize, PUsize)], handle_diagonals: bool) -> usize {
+    let mut ocean_floor: Grid<usize> = Grid::new(0..10, 0..10, 0);
     for (start, end) in vents {
-        if !handle_diagonals && start.x != end.x && start.y != end.y {
+        if !handle_diagonals && start.x() != end.x() && start.y() != end.y() {
             continue;
         }
 
-        let mut inc = Point::new(end.x - start.x, end.y - start.y);
-        if inc.x != 0 {
-            inc.x /= inc.x.abs();
+        let mut inc = start.distance(*end);
+        if inc.x() != 0 {
+            *inc.x_mut() /= inc.x();
         }
-        if inc.y != 0 {
-            inc.y /= inc.y.abs();
+        if inc.y() != 0 {
+            *inc.y_mut() /= inc.y();
         }
         let mut point = *start;
         while &point != end {
-            ocean_floor.set_point(point, ocean_floor.get_point(point) + 1);
-            point.inc(&inc);
+            ocean_floor.set(point, ocean_floor.get(point) + 1);
+            point = point.add(inc);
         }
-        ocean_floor.set_point(point, ocean_floor.get_point(point) + 1);
+        ocean_floor.set(point, ocean_floor.get(point) + 1);
     }
 
     ocean_floor.enumerate().fold(
