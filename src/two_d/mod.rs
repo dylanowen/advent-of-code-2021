@@ -1,25 +1,29 @@
+mod grid;
+
+pub use grid::*;
+
 use std::fmt;
 use std::fmt::{Display, Formatter};
 use std::ops::{Add, Sub};
 
-pub trait PointLike<T>
+pub trait PointLike<Num>
 where
-    T: Add<Output = T> + Sub<Output = T> + Ord,
+    Num: Add<Output = Num> + Sub<Output = Num> + Ord,
 {
-    fn new(x: T, y: T) -> Self
+    fn new(x: Num, y: Num) -> Self
     where
         Self: Sized;
 
-    fn x(&self) -> T;
+    fn x(&self) -> Num;
 
-    fn y(&self) -> T;
+    fn y(&self) -> Num;
 
     fn neighbors(&self) -> Vec<Self>
     where
         Self: Sized;
 
     #[inline]
-    fn add(&self, other: &dyn PointLike<T>) -> Self
+    fn add(&self, other: &dyn PointLike<Num>) -> Self
     where
         Self: Sized,
     {
@@ -27,7 +31,7 @@ where
     }
 
     #[inline]
-    fn sub(&self, other: &dyn PointLike<T>) -> Self
+    fn sub(&self, other: &dyn PointLike<Num>) -> Self
     where
         Self: Sized,
     {
@@ -35,7 +39,7 @@ where
     }
 
     #[inline]
-    fn distance(&self, other: &dyn PointLike<T>) -> T {
+    fn distance(&self, other: &dyn PointLike<Num>) -> Num {
         let x_distance = if self.x() > other.x() {
             self.x() - other.x()
         } else {
@@ -71,9 +75,6 @@ where
 
 #[macro_export]
 macro_rules! point_like {
-    // This macro takes an argument of designator `ident` and
-    // creates a function named `$func_name`.
-    // The `ident` designator is used for variable/function names.
     ($primitive:ty) => {
         impl PointLike<$primitive> for ($primitive, $primitive) {
             #[inline]
@@ -97,28 +98,28 @@ macro_rules! point_like {
             fn neighbors(&self) -> Vec<Self> {
                 let mut result = Vec::with_capacity(4);
 
-                if let Some(x) = self.0.checked_sub(1) {
-                    result.push((x, self.1));
+                if let Some(x) = self.x().checked_sub(1) {
+                    result.push((x, self.y()));
                 }
-                if let Some(x) = self.0.checked_add(1) {
-                    result.push((x, self.1));
+                if let Some(x) = self.x().checked_add(1) {
+                    result.push((x, self.y()));
                 }
-                if let Some(y) = self.1.checked_sub(1) {
-                    result.push((self.0, y));
+                if let Some(y) = self.y().checked_sub(1) {
+                    result.push((self.x(), y));
                 }
-                if let Some(y) = self.1.checked_add(1) {
-                    result.push((self.0, y));
+                if let Some(y) = self.y().checked_add(1) {
+                    result.push((self.x(), y));
                 }
 
                 result
             }
         }
     };
+
+    ($primitive:ty, $($other:ty),+) => {
+        point_like! { $primitive }
+        point_like! { $($other),+ }
+    };
 }
 
-point_like!(usize);
-point_like!(isize);
-point_like!(u32);
-point_like!(i32);
-point_like!(u64);
-point_like!(i64);
+point_like!(usize, u128, u64, u32, u16, u8, isize, i128, i64, i32, i16, i8);
